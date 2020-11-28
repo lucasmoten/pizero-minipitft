@@ -12,6 +12,8 @@ Here are the parts used for this project
 - [2x20 pin Header](https://www.adafruit.com/product/2822) $0.95 USD
 - [Mini PiTFT 135x240 Color TFT](https://www.adafruit.com/product/4393) $14.95 USD
 
+Solder the pin header to the Raspberry Pi Zero W as you normally would. Then put the Mini PiTFT on top of the header.
+
 
 ## Initial setup of Raspberry Pi
 
