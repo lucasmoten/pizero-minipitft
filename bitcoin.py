@@ -8,7 +8,9 @@ from PIL import Image, ImageDraw, ImageFont
 import adafruit_rgb_display.st7789 as st7789
 import requests
 
-mempoolapi = "https://mempool.space/api/v1/fees/mempool-blocks"
+mempoolurl = "https://mempool.space/api/v1/fees/mempool-blocks"
+numbersurl = "http://your.own.node:1839/the_numbers_latest.txt"
+priceurl = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
 
 # Start timer
 start = time.time()
@@ -46,22 +48,26 @@ buttonB.switch_to_input()
 
 # Panels
 maxPanel = 4
-currentPanel = 3
+currentPanel = 2
+autopanel = False
 
 # Colors
 bitcoinorange = "#f7931a"
 bitcoingrey = "#4d4d4d"
 
 # Images for rollercoaster guy
-imageRCOrig = Image.open('bitcoin-rollercoaster.jpg')
-imageRCCrop = imageRCOrig.crop((1,150,874,775))
-imageRCSize = imageRCCrop.resize((240,135))
+#imageRCOrig = Image.open('bitcoin-rollercoaster.jpg')
+#imageRCCrop = imageRCOrig.crop((1,150,874,775))
+#imageRCSize = imageRCCrop.resize((240,135))
 imageRCUp       = (Image.open('rollercoasterguy-135x240-up.bmp')).convert(mode="RGB")
 imageRCDown     = (Image.open('rollercoasterguy-135x240-down.bmp')).convert(mode="RGB")
 imageRCFly      = (Image.open('rollercoasterguy-135x240-fly.bmp')).convert(mode="RGB")
 imageRCTopLeft  = (Image.open('rollercoasterguy-135x240-topleft.bmp')).convert(mode="RGB")
 imageRCTopRight = (Image.open('rollercoasterguy-135x240-topright.bmp')).convert(mode="RGB")
 imageRCFlat     = (Image.open('rollercoasterguy-135x240-flat.bmp')).convert(mode="RGB")
+
+# Bitcoin logo
+imageBTC = (Image.open('bitcoinlogo-100x100.bmp')).convert(mode="RGB")
 
 # Create blank image for drawing.
 # Make sure to create image with mode 'RGB' for full color.
@@ -84,7 +90,8 @@ bottom = height - padding
 # Load in some fonts
 fontST = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
 fontST2 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
-fontBTC = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-BI.ttf", 96, encoding="unic")
+fontBTC = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-BI.ttf", 72, encoding="unic")
+fontBTC2 = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-BI.ttf", 24, encoding="unic")
 fontMP = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
 
 # Initial stats
@@ -106,8 +113,18 @@ Temp = subprocess.check_output(cmd, shell=True).decode("utf-8")
 dtTMP = time.time() - start
 
 # Initial mempool
-mempooldata = requests.get(mempoolapi)
+mempooldata = requests.get(mempoolurl)
 dtMPB = time.time() - start
+
+# Initial numbers
+numbersdata = requests.get(numbersurl)
+dtNUM = time.time() - start
+
+# Initial price
+pricedata = requests.get(priceurl)
+dtPRC = time.time() - start
+currentprice = pricedata.json()['bitcoin']['usd']
+pricemode = 0
 
 # Turn on the backlight
 backlight = digitalio.DigitalInOut(board.D22)
@@ -121,14 +138,32 @@ targetFPS = 5
 counter = 0
 buttonWait = 0
 
+def check_for_new_price(dtPRC, currentprice, pricemode):
+    if elapsed > (dtPRC + 90):
+        pricedata = requests.get(priceurl)
+        dtPRC = elapsed
+        newprice = pricedata.json()['bitcoin']['usd']
+        pricediff = newprice - currentprice
+        if pricediff > -5 and pricediff < 5:
+            pricemode = 0
+        elif pricediff >  5 and pricediff < 100:
+            pricemode = 1
+        elif pricediff > 100:
+            pricemode = 2
+        elif pricediff < -5 and pricediff > -100:
+            pricemode = -1
+        elif pricediff < -100:
+            pricemode = -2
+        currentprice = newprice
+
 
 def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
     blockcolor = "#905206"
     if medianFee < 20:
         blockcolor = "#11960f" # green
-    elif medianFee < 50:
+    elif medianFee < 100:
         blockcolor = "#905206" # orange
-    elif medianFee < 200:
+    elif medianFee < 300:
         blockcolor = "#960f41" # red
     else:
         blockcolor = "#3c11c1" # purple
@@ -173,16 +208,25 @@ while True:
             panelDir = 1
             currentPanel = currentPanel + panelDir
             buttonWait = elapsed + .4
+            autopanel = False
         # just button B (down) pressed
         if buttonB.value and not buttonA.value:
             panelDir = -1
             currentPanel = currentPanel + panelDir
             buttonWait = elapsed + .4
-        # loop around bounds
-        if currentPanel < 0:
-            currentPanel = maxPanel - 1
-        if currentPanel >= maxPanel:
-            currentPanel = 0
+            autopanel = False
+        # both buttons put in auto scan mode
+        if buttonA.value and buttonB.value:
+            panelDir = 1
+            autopanel = True
+            buttonWait = elapsed + .4
+    if autopanel and (counter % 50 == 0):
+        currentPanel = currentPanel + panelDir
+    # loop around bounds
+    if currentPanel < 0:
+        currentPanel = maxPanel - 1
+    if currentPanel >= maxPanel:
+        currentPanel = 0
 
     # Debug Stats
     if currentPanel == 0:
@@ -232,35 +276,60 @@ while True:
         draw.text((x, y), "Sleep Target: " + str(st), font=fontST, fill=bitcoinorange)
         disp.image(image, rotation)
 
-    # Bitcoin logo
+    # Bitcoin logo + latest run the numbers results
     if currentPanel == 1:
-        draw.rectangle((0, 0, width, height), outline=0, fill=0)
-        y = top
-        draw.ellipse((10,10,125,125), fill=bitcoinorange, outline=bitcoinorange)
-        y = 10
-        x = 30
-        draw.text((x, y), "B", font=fontBTC, fill="#FFFFFF")
+        # Update data if enough time has past
+        if elapsed > (dtNUM + 300): # 5 minutes
+            numbersdata = requests.get(numbersurl)
+            dtNUM = time.time() - start
+        draw.rectangle((0,0,width,height),outline=0,fill=0)
+        image.paste(imageBTC,(0,0,100,100))
+        xo = 105
+        yo = 13
+        draw.rectangle((0 + xo, 0, width - xo, height), outline=0, fill=0)
+        numbersjson = numbersdata.json()
+        lastrunblock = numbersjson['height']
+        totalsupply = numbersjson['total_amount']
+        draw.text((xo,yo), "Block Height", font=fontST, fill="#FFFFFF")
+        draw.text((xo,yo+17), str(lastrunblock), font=fontST, fill=bitcoinorange)
+        draw.text((xo,yo+50), "Total Supply", font=fontST, fill="#FFFFFF")
+        draw.text((xo,yo+67), str(totalsupply), font=fontST, fill=bitcoinorange)
+        draw.text((15,xo), "Run The Numbers!", font=fontBTC2, fill=bitcoinorange)
         disp.image(image, rotation)
 
     # Bitcoin Roller Coaster Guy
     if currentPanel == 2:
         draw.rectangle((0,0,width,height),outline=0,fill=0)
-        if counter % 10 < 2:
-            disp.image(imageRCFly, rotation)
-        elif counter % 10 < 4:
-            disp.image(imageRCUp, rotation)
-        elif counter % 10 < 6:
-            disp.image(imageRCTopLeft, rotation)
-        elif counter % 10 < 8:
-            disp.image(imageRCTopRight, rotation)
-        elif counter % 10 < 10:
-            disp.image(imageRCDown, rotation)
+        check_for_new_price(dtPRC, currentprice, pricemode)
+        rcg = Image.new("RGB", (width, height))
+        rcgdraw = ImageDraw.Draw(rcg)
+        if pricemode == -2:
+            rcg.paste(imageRCDown, (0,0))
+            rcgdraw.text((122,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((120,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        if pricemode == -1:
+            rcg.paste(imageRCTopRight, (0,0))
+            rcgdraw.text((122,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((120,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        if pricemode == 0:
+            rcg.paste(imageRCFlat, (0,0))
+            rcgdraw.text((12,107),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((10,105),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        if pricemode == 1:
+            rcg.paste(imageRCTopLeft, (0,0))
+            rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        if pricemode == 2:
+            rcg.paste(imageUp, (0,0))
+            rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        disp.image(rcg, rotation)
 
     # Mempool
     if currentPanel == 3:
         # Update data if enough time has past
-        if elapsed > (dtMPB + 120):
-            mempooldata = requests.get(mempoolapi)
+        if elapsed > (dtMPB + 20):
+            mempooldata = requests.get(mempoolurl)
             dtMPB = elapsed
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
         mempooljson = mempooldata.json()
@@ -279,6 +348,14 @@ while True:
         nTx = int(mempooljson[pendingblock]['nTx'])
         drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
         disp.image(image, rotation)
+
+    # Sats / USD
+    if currentPanel == 4:
+        draw.rectangle((0,0,width,height),outline=0,fill=0)
+        check_for_new_price(dtPRC, currentprice, pricemode)
+        draw.text((10,10),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        disp.image(image, rotation)
+
 
     # Sleep to sync framerate to target
     elapsed = time.time() - loopstart
