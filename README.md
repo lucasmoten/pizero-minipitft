@@ -2,102 +2,43 @@
 
 Scripts for Adafruit Mini Pi TFT
 
-- [bitcoin.py](bitcoin.py) - A script with multiple panels to display assorted bitcoin related interests.  Currently focused on mempool and sats per byte to get in next 2 blocks
+- [bitcoin.py](bitcoin.py) - A script with multiple panels to display assorted bitcoin related interests.
 
+## Prerequisites
 
-This is an initial guide for how to setup this project on a Raspberry Pi Zero
+Before using the scripts, you'll need to setup your Raspberry Pi.
 
-Here are the parts used for this project
-- [Raspberry Pi Zero W](https://www.adafruit.com/product/3400) $10.00 USD
-- [2x20 pin Header](https://www.adafruit.com/product/2822) $0.95 USD
-- [Mini PiTFT 135x240 Color TFT](https://www.adafruit.com/product/4393) $14.95 USD
+A brief guide for [prerequisites](prereqs.md) can guide you through this
 
-Solder the pin header to the Raspberry Pi Zero W as you normally would. Then put the Mini PiTFT on top of the header.
+## BITCOIN.PY
 
+| Panel # | Name | Image |
+| --- | --- | --- |
+| 1 | Run the Numbers | <img src="panel1.jpg" style="width:400px" /> |
+| 2 | Rollercoaster Guy with Price | <img src="panel2.jpg" style="width:400px" /> |
+| 3 | Mempool Blocks | <img src="panel3.jpg" style="width:400px" /> |
+| 4 | Sats per Fiat Unit | <img src="panel4.jpg" style="width:400px" /> |
 
-## Initial setup of Raspberry Pi
+By default, the script operates in auto scan mode, displaying a panel for approximately 10 seconds before advancing to the next.  
 
-This is based in part on https://learn.adafruit.com/adafruit-mini-pitft-135x240-color-tft-add-on-for-raspberry-pi/python-setup. 
+The two buttons allow for manually selecting previous and next panel.  This deactivates auto scan mode.
 
-You will need a Raspberry Pi Zero W.  Alternatively you can use a heftier Pi3B or Pi4B but it's not necessary for this project.
+Pressing both buttons simultaneously will re-activate auto scan mode.
 
-Use Raspberry Pi Imager to install Raspbian Lite 
+The following three endpoints are referenced by this script
 
-Activate SSH support and setup your wifi connection by editing the wpa_supplicant.conf
+* https://mempool.space/api/v1/fees/mempool-blocks
 
-SSH into the pi once you've identified which device it is on the network
+  The API endpoint is called once every 2 minutes if the panel is active to update results.  Mempool blocks are based upon the general look and feel of that rendered at https://mempool.space/, focusing on the next two upcoming blocks.
 
-Default credentials are 
-- username: pi
-- password: raspberry
+* http://your.own.node:1839/the_numbers_latest.txt
 
-You should change those
+  This endpoint is the [run the numbers service](https://github.com/lucasmoten/runthenumbers) that you can setup on your own node.  This is a separate project that stores the results of gettxoutsetinfo every 5 blocks.
 
-Once logged in, run the following
+* https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
 
-```bash
-sudo raspi-config
-```
+  This endpoint is the [Powered by CoinGecko API](https://www.coingecko.com/en), and provides for the current price of Bitcoion in USD. This is checked once every 5 minutes and used for both the roller coaster guy display, as well as the sats per fiat unit display.
 
-And enable the I2C and SPI interfaces.
-Save and exit, and reboot the pi.
-
-```
-sudo reboot now
-```
-
-And then SSH back in.
-
-## Install CircuitPython Libraries on Raspberry Pi
-
-This project depends on Python and assorted libraries
-
-Follow instructions here:
-https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
-
-Which 
-
-```bash
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install -y python3 git python3-pip
-sudo update-alternatives --install /usr/bin/python python $(which python2) 1
-sudo update-alternatives --install /usr/bin/python python $(which python3) 2
-sudo update-alternatives --config python
-pip3 install RPI.GPIO
-pip3 install adafruit-blinka
-```
-
-## Install for RGB display
-
-Now run these commands
-
-```bash
-sudo pip3 install adafruit-circuitpython-rgb-display
-sudo pip3 install --upgrade --force-reinstall spidev
-```
-
-## Install fonts
-
-```bash
-sudo apt-get install ttf-dejavu
-wget https://assets.ubuntu.com/v1/0cef8205-ubuntu-font-family-0.83.zip
-unzip 0cef8205-ubuntu-font-family-0.83.zip
-sudo mkdir -p /usr/share/fonts/truetype/ubuntu
-sudo mv ubuntu-font-family-0.83/*.* /usr/share/fonts/truetype/ubuntu
-```
-
-## Install Pillow Library
-
-```bash
-sudo apt-get install python3-pil
-```
-
-## Install NumPy Library
-
-```bash
-sudo apt-get install python3-numpy
-```
 
 ## Download the Script and files
 
@@ -114,7 +55,9 @@ Review/Edit
 ```bash
 nano bitcoin.py
 ```
-If you have your own mempool server you can change the API endpoint at the top
+You'll need to set the URL for your node for the numbersurl.
+
+If you have your own mempool server v2 you can change the endpoint for mempoolurl
 
 
 Test run

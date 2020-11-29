@@ -12,9 +12,8 @@ mempoolurl = "https://mempool.space/api/v1/fees/mempool-blocks"
 numbersurl = "http://your.own.node:1839/the_numbers_latest.txt"
 priceurl = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
 
-# Start timer
+# Start timer to have a basis for elapsed time
 start = time.time()
-
 
 # Configuration for CS and DC pins (these are FeatherWing defaults on M0/M4):
 cs_pin = digitalio.DigitalInOut(board.CE0)
@@ -47,9 +46,13 @@ buttonA.switch_to_input()
 buttonB.switch_to_input()
 
 # Panels
-maxPanel = 4
-currentPanel = 2
-autopanel = False
+minPanel = 1
+maxPanel = 5
+currentPanel = 4
+autopanel = True
+panelDir = 1
+drawnPanel = 0
+dtPanel = time.time() - start
 
 # Colors
 bitcoinorange = "#f7931a"
@@ -85,7 +88,6 @@ disp.image(image, rotation)
 padding = -2
 top = padding
 bottom = height - padding
-
 
 # Load in some fonts
 fontST = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
@@ -139,7 +141,7 @@ counter = 0
 buttonWait = 0
 
 def check_for_new_price(dtPRC, currentprice, pricemode):
-    if elapsed > (dtPRC + 90):
+    if elapsed > (dtPRC + 300): # 5 minutes
         pricedata = requests.get(priceurl)
         dtPRC = elapsed
         newprice = pricedata.json()['bitcoin']['usd']
@@ -155,7 +157,21 @@ def check_for_new_price(dtPRC, currentprice, pricemode):
         elif pricediff < -100:
             pricemode = -2
         currentprice = newprice
+    return dtPRC, currentprice, pricemode
 
+def satssquare(dc, dr, sats, satscolor):
+    satsleft = sats
+    for y in range(10):
+        for x in range(10):
+            if satsleft > 0:
+                # draw
+                tlx = (dc*30)+(x*3)
+                tly = (dr*30)+(y*3)
+                brx = tlx+1
+                bry = tly+1
+                draw.rectangle(((tlx,tly),(brx,bry)),satscolor,satscolor)
+             # decrement
+            satsleft = satsleft - 1
 
 def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
     blockcolor = "#905206"
@@ -195,41 +211,50 @@ def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
     h += oy
     draw.text((x+15+(103/2)-(w/2), y+95), t, font=fontST, fill="#FFFFFF")
 
-
 loopstart = time.time()
+buttonsPressed = ""
 while True:
     counter = counter + 1
     elapsed = time.time() - start
 
     # User inputs
     if elapsed > buttonWait:
-        # just button A (up) pressed
+        # just button A (top) pressed
         if buttonA.value and not buttonB.value:
             panelDir = 1
             currentPanel = currentPanel + panelDir
             buttonWait = elapsed + .4
+            buttonsPressed = buttonsPressed + "A"
             autopanel = False
-        # just button B (down) pressed
+        # just button B (bottom) pressed
         if buttonB.value and not buttonA.value:
             panelDir = -1
             currentPanel = currentPanel + panelDir
             buttonWait = elapsed + .4
+            buttonsPressed = buttonsPressed + "B"
             autopanel = False
         # both buttons put in auto scan mode
-        if buttonA.value and buttonB.value:
+        if not buttonA.value and not buttonB.value:
             panelDir = 1
             autopanel = True
             buttonWait = elapsed + .4
+    if buttonsPressed[-5:] == "ABABA":
+        # enable debug panel
+        minPanel = 0
+        # clear
+        buttonsPressed = ""
+    # advance panel approx every 10 seconds if auto scan mode 
     if autopanel and (counter % 50 == 0):
         currentPanel = currentPanel + panelDir
     # loop around bounds
-    if currentPanel < 0:
+    if currentPanel < minPanel:
         currentPanel = maxPanel - 1
     if currentPanel >= maxPanel:
-        currentPanel = 0
+        currentPanel = minPanel
 
-    # Debug Stats
+    # Debug Stats (to enable at run time, press button order top, bottom, top, bottom, top)
     if currentPanel == 0:
+        drawnPanel = 0
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
         # Dont update on every cycle. Too taxing, little change
         # Shell scripts for system monitoring from here:
@@ -277,7 +302,9 @@ while True:
         disp.image(image, rotation)
 
     # Bitcoin logo + latest run the numbers results
-    if currentPanel == 1:
+    if currentPanel == 1 and ((drawnPanel != 1) or (elapsed > dtPanel + 20)):
+        drawnPanel = 1
+        dtPanel = elapsed
         # Update data if enough time has past
         if elapsed > (dtNUM + 300): # 5 minutes
             numbersdata = requests.get(numbersurl)
@@ -298,62 +325,112 @@ while True:
         disp.image(image, rotation)
 
     # Bitcoin Roller Coaster Guy
-    if currentPanel == 2:
+    if currentPanel == 2 and ((drawnPanel != 2) or (elapsed > dtPanel + 20)):
+        drawnPanel = 2
+        dtPanel = elapsed
         draw.rectangle((0,0,width,height),outline=0,fill=0)
-        check_for_new_price(dtPRC, currentprice, pricemode)
+        dtPRC, currentprice, pricemode = check_for_new_price(dtPRC, currentprice, pricemode)
         rcg = Image.new("RGB", (width, height))
         rcgdraw = ImageDraw.Draw(rcg)
         if pricemode == -2:
             rcg.paste(imageRCDown, (0,0))
             rcgdraw.text((122,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((119,14),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
             rcgdraw.text((120,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         if pricemode == -1:
             rcg.paste(imageRCTopRight, (0,0))
-            rcgdraw.text((122,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((120,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((12,7),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((9,4),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((10,5),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         if pricemode == 0:
             rcg.paste(imageRCFlat, (0,0))
             rcgdraw.text((12,107),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((9,104),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
             rcgdraw.text((10,105),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         if pricemode == 1:
             rcg.paste(imageRCTopLeft, (0,0))
-            rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((122,7),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((119,4),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((120,5),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         if pricemode == 2:
             rcg.paste(imageUp, (0,0))
             rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
+            rcgdraw.text((9,14),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
             rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         disp.image(rcg, rotation)
 
     # Mempool
-    if currentPanel == 3:
+    if currentPanel == 3 and ((drawnPanel != 3) or (elapsed > dtPanel + 20)):
+        drawnPanel = 3
+        dtPanel = elapsed
         # Update data if enough time has past
-        if elapsed > (dtMPB + 20):
-            mempooldata = requests.get(mempoolurl)
+        newmempooldata = mempooldata
+        if elapsed > (dtMPB + 120): # 2 minutes
+            newmempooldata = requests.get(mempoolurl)
             dtMPB = elapsed
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
-        mempooljson = mempooldata.json()
-        # Left block
-        pendingblock = 1
-        medianFee = int(round(mempooljson[pendingblock]['medianFee']))
-        feeRangeMin = int(round(mempooljson[pendingblock]['feeRange'][0]))
-        feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
-        nTx = int(mempooljson[pendingblock]['nTx'])
-        drawmempoolblock(0, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
-        # Right block
-        pendingblock = 0
-        medianFee = int(round(mempooljson[pendingblock]['medianFee']))
-        feeRangeMin = int(round(mempooljson[pendingblock]['feeRange'][0]))
-        feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
-        nTx = int(mempooljson[pendingblock]['nTx'])
-        drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
+        if mempooldata.status_code == 200:
+            mempooljson = newmempooldata.json()
+        else:
+            mempooljson = mempooldata.json()
+        try:
+            # Left block
+            pendingblock = 1
+            medianFee = int(round(mempooljson[pendingblock]['medianFee']))
+            feeRangeMin = int(round(mempooljson[pendingblock]['feeRange'][0]))
+            feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
+            nTx = int(mempooljson[pendingblock]['nTx'])
+            drawmempoolblock(0, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
+            # Right block
+            pendingblock = 0
+            medianFee = int(round(mempooljson[pendingblock]['medianFee']))
+            feeRangeMin = int(round(mempooljson[pendingblock]['feeRange'][0]))
+            feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
+            nTx = int(mempooljson[pendingblock]['nTx'])
+            drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
+        except:
+            drawmempoolblock(0, 0, 666, 1, 999, 9999)
+            drawmempoolblock(120, 0, 999, 999, 999, 9999)
         disp.image(image, rotation)
 
-    # Sats / USD
-    if currentPanel == 4:
+    # Sats per Fiat Unit 
+    if currentPanel == 4 and ((drawnPanel != 4) or (elapsed > dtPanel + 20)):
+        drawnPanel = 4
+        dtPanel = elapsed
         draw.rectangle((0,0,width,height),outline=0,fill=0)
-        check_for_new_price(dtPRC, currentprice, pricemode)
-        draw.text((10,10),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        dtPRC, currentprice, pricemode = check_for_new_price(dtPRC, currentprice, pricemode)
+        fiatunit = .5
+        if int(round(currentprice)) > 28000:
+            fiatunit = 1
+        satsperfiatunit = int(round(100000000.0 / (currentprice / fiatunit))) 
+        t = str(satsperfiatunit) + " sats/$" + str(fiatunit)
+        dc = 0
+        dr = 0
+        satscolors = [
+            "#FF0000","#FF3F00","#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F",
+            "#FF3F00","#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF",
+            "#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF","#007FFF",
+            "#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF","#007FFF","#0000FF"
+        ]
+        colorindex = 0
+        while satsperfiatunit > 100:
+            # decrement satsperfiatunit
+            satsperfiatunit = satsperfiatunit - 100
+            # draw satssquare
+            satssquare(dc, dr, 100, satscolors[colorindex])
+            # advance to next square position
+            dc = dc + 1
+            if dc >= 8:
+                dr = dr + 1
+                dc = 0
+            colorindex = colorindex + 1
+        # remainder
+        satssquare(dc, dr, satsperfiatunit, satscolors[colorindex])
+        # label
+        w,h = draw.textsize(t, fontST2)
+        ox,oy = fontST2.getoffset(t)
+        draw.text((width-w,height-h),t,font=fontST2, fill=bitcoinorange)
+        # draw.text((10,105),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         disp.image(image, rotation)
 
 
