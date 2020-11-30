@@ -353,7 +353,7 @@ while True:
             rcgdraw.text((119,4),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
             rcgdraw.text((120,5),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
         if pricemode == 2:
-            rcg.paste(imageUp, (0,0))
+            rcg.paste(imageRCUp, (0,0))
             rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
             rcgdraw.text((9,14),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
             rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
