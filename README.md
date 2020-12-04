@@ -6,23 +6,23 @@ Scripts for Adafruit Mini Pi TFT
 
 ## License
 
-The custom code in this repository is licensed under the [MIT Licenese](LICENSE).
-The script and guidance is based on works prepared by lady ada, Melissa LeBlanc-Williams of [Adafruit](https://learn.adafruit.com/)
+The custom code in this repository is licensed under the [MIT License](LICENSE).
+The script and guidance is based on works prepared by lady ada, and Melissa LeBlanc-Williams of [Adafruit](https://learn.adafruit.com/)
 
 ## Prerequisites
 
 Before using the scripts, you'll need to setup your Raspberry Pi.
 
-A brief guide for [prerequisites](prereqs.md) can guide you through this
+A brief guide for [prerequisites](docs/prereqs.md) can guide you through this
 
 ## BITCOIN.PY
 
 | Panel # | Name | Image |
 | --- | --- | --- |
-| 1 | Run the Numbers | <img src=".github/panel1.jpg" style="width:400px" /> |
-| 2 | Rollercoaster Guy with Price | <img src=".github/panel2.jpg" style="width:400px" /> |
-| 3 | Mempool Blocks | <img src=".github/panel3.jpg" style="width:400px" /> |
-| 4 | Sats per Fiat Unit | <img src=".github/panel4.jpg" style="width:400px" /> |
+| 1 | Run the Numbers | <img src="docs/images/panel1.jpg" style="width:400px" /> |
+| 2 | Rollercoaster Guy with Price | <img src="docs/images/panel2.jpg" style="width:400px" /> |
+| 3 | Mempool Blocks | <img src="docs/images/panel3.jpg" style="width:400px" /> |
+| 4 | Sats per Fiat Unit | <img src="docs/images/panel4.jpg" style="width:400px" /> |
 
 By default, the script operates in auto scan mode, displaying a panel for approximately 10 seconds before advancing to the next.  
 

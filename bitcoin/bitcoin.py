@@ -408,7 +408,7 @@ while True:
                 dtMPB = elapsed
             except:
                 # fake advance the last mempool time by a minute to delay next check
-                dtMPB = dtMBP + 60
+                dtMPB = dtMPB + 60
         blackscreen()
         if mempooldata.status_code == 200:
             mempooljson = newmempooldata.json()
