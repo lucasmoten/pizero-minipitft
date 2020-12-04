@@ -42,7 +42,7 @@ The following three endpoints are referenced by this script
 
 ## Download the Script and files
 
-Clone the repo
+### Clone the repo
 
 ```bash
 cd ~/
@@ -50,7 +50,7 @@ git clone git@github.com:lucasmoten/pizero-minipitft.git
 cd ~/pizero-minipitft
 ```
 
-Review/Edit
+### Review/Edit
 
 ```bash
 nano bitcoin.py
@@ -60,7 +60,7 @@ You'll need to set the URL for your node for the numbersurl.
 If you have your own mempool server v2 you can change the endpoint for mempoolurl
 
 
-Test run
+### Test run
 
 ```bash
 cd ~/pizero-minipitft
@@ -68,4 +68,30 @@ sudo python3 bitcoin.py
 ```
 
 Press CTRL+C to cancel the process. 
+
+### Autorun on boot
+
+If the Raspberry Pi is rebooted, you would normally need to ssh back in and start the script manually.
+To start the script automatically on power on, you can make an entry in the /etc/rc.local to run it.
+
+```bash
+sudo nano /etc/rc.local
+```
+
+And then add this block before the last line (`exit 0`)
+
+```ini
+# Start the bitcoin script
+(
+  cd /home/pi
+  python3 /home/pi/bitcoin.py &
+)
+```
+Be certain that you include the ampersand at the end of the command to ensure it is started as a background process or else you may not be able to login.
+
+Press CTRL+O to save. Test it out by rebooting.
+
+```bash
+sudo reboot now
+```
 
