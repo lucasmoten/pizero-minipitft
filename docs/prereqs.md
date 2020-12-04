@@ -12,11 +12,11 @@ Before using any scripts in this project, you'll need to setup your Raspberry Pi
 
 1. Acquire necessary components as listed above.  This project uses a Raspberry Pi Zero W, but any Raspberry Pi with networking support and modern header layout should suffice.
 
-2. If using the recommended Raspberry Pi Zero W, solder on the pin header as you normally would, or acquire one with pins presoldered.
+2. If using the recommended Raspberry Pi Zero W, solder on the pin header as you normally would, or acquire one with pins pre-soldered.
 
 3. Install operation system as Raspberry Pi Os Lite using Raspberry Pi Imager.  Follow guidance here: https://www.raspberrypi.org/software/
 
-4. Next you'll want to enable SSH, setup your wifi settings on the Micro SD card.
+4. Next you'll want to enable SSH, setup your Wi-Fi settings on the Micro SD card.
 
 5. Once powered up, identify the raspberry Pi on the network and SSH in.  The default credentials are pi/raspberry, and you should change these
 
