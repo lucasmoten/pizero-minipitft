@@ -142,8 +142,12 @@ buttonWait = 0
 
 def check_for_new_price(dtPRC, currentprice, pricemode):
     if elapsed > (dtPRC + 300): # 5 minutes
-        pricedata = requests.get(priceurl)
-        dtPRC = elapsed
+        try:
+            pricedata = requests.get(priceurl)
+            dtPRC = elapsed
+        except:
+            # fake advance our time so we try again later
+            dtPRC = dtPRC + 120
         newprice = pricedata.json()['bitcoin']['usd']
         pricediff = newprice - currentprice
         if pricediff > -5 and pricediff < 5:
@@ -307,8 +311,11 @@ while True:
         dtPanel = elapsed
         # Update data if enough time has past
         if elapsed > (dtNUM + 300): # 5 minutes
-            numbersdata = requests.get(numbersurl)
-            dtNUM = time.time() - start
+            try:
+                numbersdata = requests.get(numbersurl)
+                dtNUM = time.time() - start
+            except:
+                dtNUM = dtNUM + 60
         draw.rectangle((0,0,width,height),outline=0,fill=0)
         image.paste(imageBTC,(0,0,100,100))
         xo = 105
@@ -366,8 +373,12 @@ while True:
         # Update data if enough time has past
         newmempooldata = mempooldata
         if elapsed > (dtMPB + 120): # 2 minutes
-            newmempooldata = requests.get(mempoolurl)
-            dtMPB = elapsed
+            try:
+                newmempooldata = requests.get(mempoolurl)
+                dtMPB = elapsed
+            except:
+                # fake advance the last mempool time by a minute to delay next check
+                dtMPB = dtMBP + 60
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
         if mempooldata.status_code == 200:
             mempooljson = newmempooldata.json()
