@@ -37,7 +37,7 @@ The following three endpoints are referenced by this script
 
 * https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
 
-  This endpoint is the [Powered by CoinGecko API](https://www.coingecko.com/en), and provides for the current price of Bitcoion in USD. This is checked once every 5 minutes and used for both the roller coaster guy display, as well as the sats per fiat unit display.
+  This endpoint is the [Powered by CoinGecko API](https://www.coingecko.com/en), and provides for the current price of Bitcoin in USD. This is checked once every 5 minutes and used for both the roller coaster guy display, as well as the sats per fiat unit display.
 
 
 ## Download the Script and files
