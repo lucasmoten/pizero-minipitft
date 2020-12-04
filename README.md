@@ -2,7 +2,12 @@
 
 Scripts for Adafruit Mini Pi TFT
 
-- [bitcoin.py](bitcoin.py) - A script with multiple panels to display assorted bitcoin related interests.
+- [bitcoin.py](./bitcoin/bitcoin.py) - A script with multiple panels to display assorted bitcoin related interests.
+
+## License
+
+The custom code in this repository is licensed under the [MIT Licenese](LICENSE).
+The script and guidance is based on works prepared by lady ada, Melissa LeBlanc-Williams of [Adafruit](https://learn.adafruit.com/)
 
 ## Prerequisites
 
@@ -14,10 +19,10 @@ A brief guide for [prerequisites](prereqs.md) can guide you through this
 
 | Panel # | Name | Image |
 | --- | --- | --- |
-| 1 | Run the Numbers | <img src="panel1.jpg" style="width:400px" /> |
-| 2 | Rollercoaster Guy with Price | <img src="panel2.jpg" style="width:400px" /> |
-| 3 | Mempool Blocks | <img src="panel3.jpg" style="width:400px" /> |
-| 4 | Sats per Fiat Unit | <img src="panel4.jpg" style="width:400px" /> |
+| 1 | Run the Numbers | <img src=".github/panel1.jpg" style="width:400px" /> |
+| 2 | Rollercoaster Guy with Price | <img src=".github/panel2.jpg" style="width:400px" /> |
+| 3 | Mempool Blocks | <img src=".github/panel3.jpg" style="width:400px" /> |
+| 4 | Sats per Fiat Unit | <img src=".github/panel4.jpg" style="width:400px" /> |
 
 By default, the script operates in auto scan mode, displaying a panel for approximately 10 seconds before advancing to the next.  
 
@@ -47,7 +52,7 @@ The following three endpoints are referenced by this script
 ```bash
 cd ~/
 git clone git@github.com:lucasmoten/pizero-minipitft.git
-cd ~/pizero-minipitft
+cd ~/pizero-minipitft/bitcoin
 ```
 
 ### Review/Edit
@@ -63,7 +68,7 @@ If you have your own mempool server v2 you can change the endpoint for mempoolur
 ### Test run
 
 ```bash
-cd ~/pizero-minipitft
+cd ~/pizero-minipitft/bitcoin
 sudo python3 bitcoin.py
 ```
 
@@ -83,8 +88,8 @@ And then add this block before the last line (`exit 0`)
 ```ini
 # Start the bitcoin script
 (
-  cd /home/pi
-  python3 /home/pi/bitcoin.py &
+  cd /home/pi/pizero-minipitft/bitcoin
+  python3 /home/pi/pizero-minipitft/bitcoin/bitcoin.py &
 )
 ```
 Be certain that you include the ampersand at the end of the command to ensure it is started as a background process or else you may not be able to login.
@@ -94,4 +99,4 @@ Press CTRL+O to save. Test it out by rebooting.
 ```bash
 sudo reboot now
 ```
-
+After up to a minute, the pi should begin cycling through panels 

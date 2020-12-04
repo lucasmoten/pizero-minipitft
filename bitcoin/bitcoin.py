@@ -46,7 +46,7 @@ buttonA.switch_to_input()
 buttonB.switch_to_input()
 
 # Panels
-minPanel = 1
+minPanel = 1 # diagnostic/debug panel is panel 0. This starts with diagnostics disabled
 maxPanel = 5
 currentPanel = 4
 autopanel = True
@@ -55,22 +55,42 @@ drawnPanel = 0
 dtPanel = time.time() - start
 
 # Colors
-bitcoinorange = "#f7931a"
-bitcoingrey = "#4d4d4d"
+colorbitcoinorange = "#F7931A"
+colorbitcoingrey = "#4D4D4D"
+colorblack = "#000000"
+colorwhite = "#FFFFFF"
+colordarkgrey = "#131313"
+colormediumgrey = "#353535"
+coloryellow = "#FFFF00"
+colorgreen = "#00FF00"
+colorblue = "#0000FF"
+colorpurple = "#FF00FF"
+# used for mempool block colors based on median fee
+colorfee10 = "#039BE5" # blue
+colorfee20 = "#11960F" # green
+colorfee50 = "#FDD835" # yellow
+colorfee100 = "#905206" # orange
+colorfee200 = "#B71C1C" # red
+colorfee300 = "#3C11C1" # purple
+# gradient array for sats per fiat unit display
+satscolors = [
+    "#FF0000","#FF3F00","#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F",
+    "#FF3F00","#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF",
+    "#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF","#007FFF",
+    "#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF","#007FFF","#0000FF"
+]
+
 
 # Images for rollercoaster guy
-#imageRCOrig = Image.open('bitcoin-rollercoaster.jpg')
-#imageRCCrop = imageRCOrig.crop((1,150,874,775))
-#imageRCSize = imageRCCrop.resize((240,135))
-imageRCUp       = (Image.open('rollercoasterguy-135x240-up.bmp')).convert(mode="RGB")
-imageRCDown     = (Image.open('rollercoasterguy-135x240-down.bmp')).convert(mode="RGB")
-imageRCFly      = (Image.open('rollercoasterguy-135x240-fly.bmp')).convert(mode="RGB")
-imageRCTopLeft  = (Image.open('rollercoasterguy-135x240-topleft.bmp')).convert(mode="RGB")
-imageRCTopRight = (Image.open('rollercoasterguy-135x240-topright.bmp')).convert(mode="RGB")
-imageRCFlat     = (Image.open('rollercoasterguy-135x240-flat.bmp')).convert(mode="RGB")
+imageRCDown     = (Image.open('images/rollercoasterguy-135x240-down.bmp')).convert(mode="RGB")
+imageRCFlat     = (Image.open('images/rollercoasterguy-135x240-flat.bmp')).convert(mode="RGB")
+imageRCFly      = (Image.open('images/rollercoasterguy-135x240-fly.bmp')).convert(mode="RGB")
+imageRCTopLeft  = (Image.open('images/rollercoasterguy-135x240-topleft.bmp')).convert(mode="RGB")
+imageRCTopRight = (Image.open('images/rollercoasterguy-135x240-topright.bmp')).convert(mode="RGB")
+imageRCUp       = (Image.open('images/rollercoasterguy-135x240-up.bmp')).convert(mode="RGB")
 
 # Bitcoin logo
-imageBTC = (Image.open('bitcoinlogo-100x100.bmp')).convert(mode="RGB")
+imageBTC = (Image.open('images/bitcoinlogo-100x100.bmp')).convert(mode="RGB")
 
 # Create blank image for drawing.
 # Make sure to create image with mode 'RGB' for full color.
@@ -140,6 +160,9 @@ targetFPS = 5
 counter = 0
 buttonWait = 0
 
+def blackscreen():
+    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+
 def check_for_new_price(dtPRC, currentprice, pricemode):
     if elapsed > (dtPRC + 300): # 5 minutes
         try:
@@ -177,43 +200,50 @@ def satssquare(dc, dr, sats, satscolor):
              # decrement
             satsleft = satsleft - 1
 
+
 def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
-    blockcolor = "#905206"
-    if medianFee < 20:
-        blockcolor = "#11960f" # green
+    blockcolor = colorblack
+    if medianFee < 10:
+        blockcolor = colorfee10
+    elif medianFee < 20:
+        blockcolor = colorfee20
+    elif medianFee < 50:
+        blockcolor = colorfee50
     elif medianFee < 100:
-        blockcolor = "#905206" # orange
+        blockcolor = colorfee100
+    elif medianFee < 200:
+        blockcolor = colorfee200
     elif medianFee < 300:
-        blockcolor = "#960f41" # red
+        blockcolor = colorfee300
     else:
-        blockcolor = "#3c11c1" # purple
-    draw.polygon(((x,y),(x+103,y),(x+118,y+15),(x+15,y+15)), fill="#353535", outline="#353535")
-    draw.polygon(((x,y),(x+15,y+15),(x+15,y+118),(x,y+103)), fill="#131313", outline="#131313")
+        blockcolor = colorblack
+    draw.polygon(((x,y),(x+103,y),(x+118,y+15),(x+15,y+15)), fill=colormediumgrey, outline=colormediumgrey)
+    draw.polygon(((x,y),(x+15,y+15),(x+15,y+118),(x,y+103)), fill=colordarkgrey, outline=colordarkgrey)
     draw.polygon(((x+15,y+15),(x+118,y+15),(x+118,y+118),(x+15,y+118)), fill=blockcolor, outline=blockcolor)
     t = "~%s sat/vB" % (str(medianFee)) # "~350 sat/vB"
     w,h = draw.textsize(t, fontST2)
     ox,oy = fontST2.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+20), t, font=fontST2, fill="#FFFFFF")
+    draw.text((x+15+(103/2)-(w/2), y+20), t, font=fontST2, fill=colorwhite)
     t = "%s-%s sat/vB" % (str(feeRangeMin), str(feeRangeMax)) # "100-900 sat/vB"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+45), t, font=fontST, fill="#FFFFFF")
+    draw.text((x+15+(103/2)-(w/2), y+45), t, font=fontST, fill=colorwhite)
     t = "%s" % (str(nTx)) # "2,480"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+85), t, font=fontST, fill="#FFFFFF")
+    draw.text((x+15+(103/2)-(w/2), y+85), t, font=fontST, fill=colorwhite)
     t = "transactions"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+95), t, font=fontST, fill="#FFFFFF")
+    draw.text((x+15+(103/2)-(w/2), y+95), t, font=fontST, fill=colorwhite)
 
 loopstart = time.time()
 buttonsPressed = ""
@@ -283,26 +313,26 @@ while True:
         # Write out the statistics
         x = 0
         y = top
-        draw.text((x, y), IP, font=fontST, fill="#FFFFFF")
+        draw.text((x, y), IP, font=fontST, fill=colorwhite)
         y += fontST.getsize(IP)[1]
-        draw.text((x, y), CPU, font=fontST, fill="#FFFF00")
+        draw.text((x, y), CPU, font=fontST, fill=coloryellow)
         y += fontST.getsize(CPU)[1]
-        draw.text((x, y), MemUsage, font=fontST, fill="#00FF00")
+        draw.text((x, y), MemUsage, font=fontST, fill=colorgreen)
         y += fontST.getsize(MemUsage)[1]
-        draw.text((x, y), Disk, font=fontST, fill="#0000FF")
+        draw.text((x, y), Disk, font=fontST, fill=colorblue)
         y += fontST.getsize(Disk)[1]
-        draw.text((x, y), Temp, font=fontST, fill="#FF00FF")
+        draw.text((x, y), Temp, font=fontST, fill=colorpurple)
         y += fontST.getsize(Temp)[1]
         # Counter, FPS, and Sleep Target aiming for 5 FPS is updated every cycle
         y += 10
-        draw.text((x, y), "Counter:" + str(counter), font=fontST, fill=bitcoinorange)
+        draw.text((x, y), "Counter:" + str(counter), font=fontST, fill=colorbitcoinorange)
         y += fontST.getsize("0")[1]
         fps = counter / elapsed
-        draw.text((x, y), "FPS: " + str(fps), font=fontST, fill=bitcoinorange)
+        draw.text((x, y), "FPS: " + str(fps), font=fontST, fill=colorbitcoinorange)
         y += fontST.getsize("0")[1]
         elapsed = time.time() - start
         st = (counter * (1 / targetFPS)) - elapsed
-        draw.text((x, y), "Sleep Target: " + str(st), font=fontST, fill=bitcoinorange)
+        draw.text((x, y), "Sleep Target: " + str(st), font=fontST, fill=colorbitcoinorange)
         disp.image(image, rotation)
 
     # Bitcoin logo + latest run the numbers results
@@ -316,7 +346,7 @@ while True:
                 dtNUM = time.time() - start
             except:
                 dtNUM = dtNUM + 60
-        draw.rectangle((0,0,width,height),outline=0,fill=0)
+        blackscreen()
         image.paste(imageBTC,(0,0,100,100))
         xo = 105
         yo = 13
@@ -324,46 +354,46 @@ while True:
         numbersjson = numbersdata.json()
         lastrunblock = numbersjson['height']
         totalsupply = numbersjson['total_amount']
-        draw.text((xo,yo), "Block Height", font=fontST, fill="#FFFFFF")
-        draw.text((xo,yo+17), str(lastrunblock), font=fontST, fill=bitcoinorange)
-        draw.text((xo,yo+50), "Total Supply", font=fontST, fill="#FFFFFF")
-        draw.text((xo,yo+67), str(totalsupply), font=fontST, fill=bitcoinorange)
-        draw.text((15,xo), "Run The Numbers!", font=fontBTC2, fill=bitcoinorange)
+        draw.text((xo,yo), "Block Height", font=fontST, fill=colorwhite)
+        draw.text((xo,yo+17), str(lastrunblock), font=fontST, fill=colorbitcoinorange)
+        draw.text((xo,yo+50), "Total Supply", font=fontST, fill=colorwhite)
+        draw.text((xo,yo+67), str(totalsupply), font=fontST, fill=colorbitcoinorange)
+        draw.text((15,xo), "Run The Numbers!", font=fontBTC2, fill=colorbitcoinorange)
         disp.image(image, rotation)
 
     # Bitcoin Roller Coaster Guy
     if currentPanel == 2 and ((drawnPanel != 2) or (elapsed > dtPanel + 20)):
         drawnPanel = 2
         dtPanel = elapsed
-        draw.rectangle((0,0,width,height),outline=0,fill=0)
+        blackscreen()
         dtPRC, currentprice, pricemode = check_for_new_price(dtPRC, currentprice, pricemode)
         rcg = Image.new("RGB", (width, height))
         rcgdraw = ImageDraw.Draw(rcg)
         if pricemode == -2:
             rcg.paste(imageRCDown, (0,0))
-            rcgdraw.text((122,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((119,14),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((120,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((122,17),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((119,14),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((120,15),"$" +  str(currentprice), font=fontBTC2, fill=colorbitcoinorange)
         if pricemode == -1:
             rcg.paste(imageRCTopRight, (0,0))
-            rcgdraw.text((12,7),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((9,4),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((10,5),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((12,7),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((9,4),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((10,5),"$" +  str(currentprice), font=fontBTC2, fill=colorbitcoinorange)
         if pricemode == 0:
             rcg.paste(imageRCFlat, (0,0))
-            rcgdraw.text((12,107),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((9,104),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((10,105),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((12,107),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((9,104),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((10,105),"$" +  str(currentprice), font=fontBTC2, fill=colorbitcoinorange)
         if pricemode == 1:
             rcg.paste(imageRCTopLeft, (0,0))
-            rcgdraw.text((122,7),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((119,4),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((120,5),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((122,7),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((119,4),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((120,5),"$" +  str(currentprice), font=fontBTC2, fill=colorbitcoinorange)
         if pricemode == 2:
             rcg.paste(imageRCUp, (0,0))
-            rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((9,14),"$" +  str(currentprice), font=fontBTC2, fill="#000000")
-            rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+            rcgdraw.text((12,17),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((9,14),"$" +  str(currentprice), font=fontBTC2, fill=colorblack)
+            rcgdraw.text((10,15),"$" +  str(currentprice), font=fontBTC2, fill=colorbitcoinorange)
         disp.image(rcg, rotation)
 
     # Mempool
@@ -379,7 +409,7 @@ while True:
             except:
                 # fake advance the last mempool time by a minute to delay next check
                 dtMPB = dtMBP + 60
-        draw.rectangle((0, 0, width, height), outline=0, fill=0)
+        blackscreen()
         if mempooldata.status_code == 200:
             mempooljson = newmempooldata.json()
         else:
@@ -408,7 +438,7 @@ while True:
     if currentPanel == 4 and ((drawnPanel != 4) or (elapsed > dtPanel + 20)):
         drawnPanel = 4
         dtPanel = elapsed
-        draw.rectangle((0,0,width,height),outline=0,fill=0)
+        blackscreen()
         dtPRC, currentprice, pricemode = check_for_new_price(dtPRC, currentprice, pricemode)
         fiatunit = .5
         if int(round(currentprice)) > 28000:
@@ -417,12 +447,6 @@ while True:
         t = str(satsperfiatunit) + " sats/$" + str(fiatunit)
         dc = 0
         dr = 0
-        satscolors = [
-            "#FF0000","#FF3F00","#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F",
-            "#FF3F00","#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF",
-            "#FF7F00","#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF","#007FFF",
-            "#FFBF00","#FFFF00","#7FFF00","#00FF00","#00FF7F","#00FFFF","#007FFF","#0000FF"
-        ]
         colorindex = 0
         while satsperfiatunit > 100:
             # decrement satsperfiatunit
@@ -440,8 +464,7 @@ while True:
         # label
         w,h = draw.textsize(t, fontST2)
         ox,oy = fontST2.getoffset(t)
-        draw.text((width-w,height-h),t,font=fontST2, fill=bitcoinorange)
-        # draw.text((10,105),"$" +  str(currentprice), font=fontBTC2, fill=bitcoinorange)
+        draw.text((width-w,height-h),t,font=fontST2, fill=colorbitcoinorange)
         disp.image(image, rotation)
 
 
