@@ -60,6 +60,7 @@ wget https://assets.ubuntu.com/v1/0cef8205-ubuntu-font-family-0.83.zip
 unzip 0cef8205-ubuntu-font-family-0.83.zip
 sudo mkdir -p /usr/share/fonts/truetype/ubuntu
 sudo mv ubuntu-font-family-0.83/*.* /usr/share/fonts/truetype/ubuntu
+sudo rm -rf ubuntu-font-family-0.83/
 ```
 
 ## Install Pillow Library
