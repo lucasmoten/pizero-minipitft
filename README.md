@@ -7,7 +7,10 @@ Scripts for Adafruit Mini Pi TFT
 ## License
 
 The custom code in this repository is licensed under the [MIT License](LICENSE).
-The script and guidance is based on works prepared by lady ada, and Melissa LeBlanc-Williams of [Adafruit](https://learn.adafruit.com/)
+
+The script and guidance is based on works prepared by lady ada, and Melissa LeBlanc-Williams of [Adafruit](https://learn.adafruit.com/).
+
+The original Bitcoin Rollercoaster Guy images and likeness are from [Marcus Connor \(@MarcusConnorNH\)](https://twitter.com/MarcusConnorNH/).  Check out the [Roller Coaster Guy website](https://rollercoasterguy.github.io/), and [background info on Brainless Tales](http://www.brainlesstales.com/bitcoin-roller-coaster) and the [store](https://www.zazzle.com/store/bitcoinrollercoaster) for cool shirts, pillow, mugs.
 
 ## Prerequisites
 
@@ -85,7 +88,7 @@ sudo nano /etc/rc.local
 
 And then add this block before the last line (`exit 0`)
 
-```ini
+```
 # Start the bitcoin script
 (
   cd /home/pi/pizero-minipitft/bitcoin
