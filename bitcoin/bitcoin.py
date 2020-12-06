@@ -228,18 +228,20 @@ def satssquare(dc, dr, sats, satscolor):
 
 def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
     blockcolor = colorblack
+    textcolor = colorwhite
     if medianFee < 10:
-        blockcolor = colorfee10
+        blockcolor = colorfee10   # blue
     elif medianFee < 20:
-        blockcolor = colorfee20
+        blockcolor = colorfee20   # green
     elif medianFee < 50:
-        blockcolor = colorfee50
+        blockcolor = colorfee50   # yellow
+        textcolor = colorblack
     elif medianFee < 100:
-        blockcolor = colorfee100
+        blockcolor = colorfee100  # orange
     elif medianFee < 200:
-        blockcolor = colorfee200
+        blockcolor = colorfee200  # red
     elif medianFee < 300:
-        blockcolor = colorfee300
+        blockcolor = colorfee300  # purple
     else:
         blockcolor = colorblack
     draw.polygon(((x,y),(x+103,y),(x+118,y+15),(x+15,y+15)), fill=colormediumgrey, outline=colormediumgrey)
@@ -250,25 +252,25 @@ def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
     ox,oy = fontST2.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+20), t, font=fontST2, fill=colorwhite)
+    draw.text((x+15+(103/2)-(w/2), y+20), t, font=fontST2, fill=textcolor)
     t = "%s-%s sat/vB" % (str(feeRangeMin), str(feeRangeMax)) # "100-900 sat/vB"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+45), t, font=fontST, fill=colorwhite)
+    draw.text((x+15+(103/2)-(w/2), y+45), t, font=fontST, fill=textcolor)
     t = "%s" % (str(nTx)) # "2,480"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+85), t, font=fontST, fill=colorwhite)
+    draw.text((x+15+(103/2)-(w/2), y+85), t, font=fontST, fill=textcolor)
     t = "transactions"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+95), t, font=fontST, fill=colorwhite)
+    draw.text((x+15+(103/2)-(w/2), y+95), t, font=fontST, fill=textcolor)
 
 def looppanels():
     global currentPanel
