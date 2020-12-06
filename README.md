@@ -54,7 +54,7 @@ The following three endpoints are referenced by this script
 
 ```bash
 cd ~/
-git clone git@github.com:lucasmoten/pizero-minipitft.git
+git clone https://github.com/lucasmoten/pizero-minipitft.git
 cd ~/pizero-minipitft/bitcoin
 ```
 
@@ -63,9 +63,18 @@ cd ~/pizero-minipitft/bitcoin
 ```bash
 nano bitcoin.py
 ```
-You'll need to set the URL for your node for the numbersurl.
 
-If you have your own mempool server v2 you can change the endpoint for mempoolurl
+If you are running [your own Bitcoin node](https://stadicus.github.io/RaspiBolt/), as well as the [RunTheNumbers service](https://github.com/lucasmoten/runthenumbers), then you can
+
+- set the value of `enablePanelRunTheNumbers` = `True`
+- set the value of `numbersurl` to point to your RunTheNumbers service endpoint
+
+
+If you have your own mempool server v2 you can 
+
+- set the value of `mempoolurl` to point to your own server
+
+Press CTRL + O to write out changes and then CTRL + X to exit.
 
 
 ### Test run
