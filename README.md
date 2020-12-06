@@ -6,7 +6,7 @@ Scripts for Adafruit Mini Pi TFT
 
 ## License
 
-The custom code in this repository is licensed under the [MIT License](LICENSE).
+The custom code in this repository is licensed under the [MIT License](LICENSE.md).
 
 The script and guidance is based on works prepared by lady ada, and Melissa LeBlanc-Williams of [Adafruit](https://learn.adafruit.com/).
 
