@@ -18,6 +18,7 @@ enablePanelSatsPerFiatUnit = True
 autopanel = True
 # URLs for endpoints to get data needed for driving display
 mempoolurl = "https://mempool.space/api/v1/fees/mempool-blocks"
+mempoolblockheighturl = "https://mempool.space/api/blocks/tip/height"
 numbersurl = "http://your.own.node:1839/the_numbers_latest.txt"
 priceurl = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
 #####################################################################################################
@@ -104,6 +105,7 @@ colorgreen = "#00FF00"
 colorblue = "#0000FF"
 colorpurple = "#FF00FF"
 colorred = "#FF0000"
+colormempooltext = "#1BD8F4"
 # used for mempool block colors based on median fee
 colorfee10 = "#039BE5" # blue
 colorfee20 = "#11960F" # green
@@ -135,7 +137,6 @@ fontST = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 1
 fontST2 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
 fontBTC = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-BI.ttf", 72, encoding="unic")
 fontBTC2 = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-BI.ttf", 24, encoding="unic")
-fontMP = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
 
 # Initial stats
 # Shell scripts for system monitoring from here:
@@ -226,7 +227,7 @@ def satssquare(dc, dr, sats, satscolor):
              # decrement
             satsleft = satsleft - 1
 
-def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
+def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx, blockLabel):
     blockcolor = colorblack
     textcolor = colorwhite
     if medianFee < 10:
@@ -244,33 +245,40 @@ def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx):
         blockcolor = colorfee300  # purple
     else:
         blockcolor = colorblack
-    draw.polygon(((x,y),(x+103,y),(x+118,y+15),(x+15,y+15)), fill=colormediumgrey, outline=colormediumgrey)
-    draw.polygon(((x,y),(x+15,y+15),(x+15,y+118),(x,y+103)), fill=colordarkgrey, outline=colordarkgrey)
-    draw.polygon(((x+15,y+15),(x+118,y+15),(x+118,y+118),(x+15,y+118)), fill=blockcolor, outline=blockcolor)
+    by = 12
+    draw.polygon(((x,y+by),(x+103,y+by),(x+118,y+by+15),(x+15,y+by+15)), fill=colormediumgrey, outline=colormediumgrey)
+    draw.polygon(((x,y+by),(x+15,y+by+15),(x+15,y+by+118),(x,y+by+103)), fill=colordarkgrey, outline=colordarkgrey)
+    draw.polygon(((x+15,y+by+15),(x+118,y+by+15),(x+118,y+by+118),(x+15,y+by+118)), fill=blockcolor, outline=blockcolor)
+    t = blockLabel
+    w,h = draw.textsize(t, fontST2)
+    ox,oy = fontST2.getoffset(t)
+    w += ox
+    h += oy
+    draw.text((x+15+(103/2)-(w/2), y+0), t, font=fontST2, fill=colormempooltext)
     t = "~%s sat/vB" % (str(medianFee)) # "~350 sat/vB"
     w,h = draw.textsize(t, fontST2)
     ox,oy = fontST2.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+20), t, font=fontST2, fill=textcolor)
+    draw.text((x+15+(103/2)-(w/2), y+by+20), t, font=fontST2, fill=textcolor)
     t = "%s-%s sat/vB" % (str(feeRangeMin), str(feeRangeMax)) # "100-900 sat/vB"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+45), t, font=fontST, fill=textcolor)
+    draw.text((x+15+(103/2)-(w/2), y+by+45), t, font=fontST, fill=textcolor)
     t = "%s" % (str(nTx)) # "2,480"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+85), t, font=fontST, fill=textcolor)
+    draw.text((x+15+(103/2)-(w/2), y+by+85), t, font=fontST, fill=textcolor)
     t = "transactions"
     w,h = draw.textsize(t, fontST)
     ox,oy = fontST.getoffset(t)
     w += ox
     h += oy
-    draw.text((x+15+(103/2)-(w/2), y+95), t, font=fontST, fill=textcolor)
+    draw.text((x+15+(103/2)-(w/2), y+by+95), t, font=fontST, fill=textcolor)
 
 def looppanels():
     global currentPanel
@@ -477,6 +485,7 @@ def renderPanelMempoolBlocks():
     global drawnPanel
     global dtPanel
     global dtMPB
+    global mempoolblockheight
     drawnPanel = panelMempoolBlocks
     dtPanel = elapsed
     # Update data if enough time has past
@@ -500,14 +509,14 @@ def renderPanelMempoolBlocks():
         feeRangeMin = int(round(mempooljson[pendingblock]['feeRange'][0]))
         feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
         nTx = int(mempooljson[pendingblock]['nTx'])
-        drawmempoolblock(0, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
+        drawmempoolblock(0, 0, medianFee, feeRangeMin, feeRangeMax, nTx, "~ 20 Minutes")
         # Right block
         pendingblock = 0
         medianFee = int(round(mempooljson[pendingblock]['medianFee']))
         feeRangeMin = int(round(mempooljson[pendingblock]['feeRange'][0]))
         feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
         nTx = int(mempooljson[pendingblock]['nTx'])
-        drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx)
+        drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx, "~ 10 Minutes")
     except:
         drawmempoolblock(0, 0, 666, 1, 999, 9999)
         drawmempoolblock(120, 0, 999, 999, 999, 9999)
