@@ -494,7 +494,9 @@ def renderPanelMempoolBlocks():
         try:
             newmempooldata = requests.get(mempoolurl)
             dtMPB = elapsed
-        except:
+        except Exception as e:
+            print("renderPanelMempoolBlocks get mempoolurl exception")
+            print(e)
             # fake advance the last mempool time by a minute to delay next check
             dtMPB = dtMPB + 60
     blackscreen()
@@ -517,7 +519,9 @@ def renderPanelMempoolBlocks():
         feeRangeMax = int(round(list(reversed(list(mempooljson[pendingblock]['feeRange'])))[0]))
         nTx = int(mempooljson[pendingblock]['nTx'])
         drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx, "~ 10 Minutes")
-    except:
+    except Exception as e:
+        print("renderPanelMempoolBlocks render exception")
+        print(e)
         drawmempoolblock(0, 0, 666, 1, 999, 9999, "Error Getting")
         drawmempoolblock(120, 0, 999, 999, 999, 9999, "Mempool Data")
     disp.image(image, rotation)
