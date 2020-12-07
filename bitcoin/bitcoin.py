@@ -227,7 +227,7 @@ def satssquare(dc, dr, sats, satscolor):
              # decrement
             satsleft = satsleft - 1
 
-def drawmempoolblock(x, y, medianFee, feeRangeMin, feeRangeMax, nTx, blockLabel):
+def drawmempoolblock(x=0, y=0, medianFee=999, feeRangeMin=999, feeRangeMax=999, nTx=-1, blockLabel=""):
     blockcolor = colorblack
     textcolor = colorwhite
     if medianFee < 10:
@@ -518,8 +518,8 @@ def renderPanelMempoolBlocks():
         nTx = int(mempooljson[pendingblock]['nTx'])
         drawmempoolblock(120, 0, medianFee, feeRangeMin, feeRangeMax, nTx, "~ 10 Minutes")
     except:
-        drawmempoolblock(0, 0, 666, 1, 999, 9999)
-        drawmempoolblock(120, 0, 999, 999, 999, 9999)
+        drawmempoolblock(0, 0, 666, 1, 999, 9999, "Error Getting")
+        drawmempoolblock(120, 0, 999, 999, 999, 9999, "Mempool Data")
     disp.image(image, rotation)
 
 def renderPanelSatsPerFiatUnit():
